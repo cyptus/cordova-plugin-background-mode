@@ -91,30 +91,35 @@ public class BackgroundMode extends CordovaPlugin {
     public boolean execute (String action, JSONArray args,
                             CallbackContext callback)
     {
-        boolean validAction = true;
+        try {
+            boolean validAction = true;
 
-        switch (action)
-        {
-            case "configure":
-                configure(args.optJSONObject(0), args.optBoolean(1));
-                break;
-            case "enable":
-                enableMode();
-                break;
-            case "disable":
-                disableMode();
-                break;
-            default:
-                validAction = false;
+            switch (action)
+            {
+                case "configure":
+                    configure(args.optJSONObject(0), args.optBoolean(1));
+                    break;
+                case "enable":
+                    enableMode();
+                    break;
+                case "disable":
+                    disableMode();
+                    break;
+                default:
+                    validAction = false;
+            }
+
+            if (validAction) {
+                callback.success();
+            } else {
+                callback.error("Invalid action: " + action);
+            }
+
+            return validAction;
+        } catch (Exception e) {
+            fireEvent(Event.FAILURE, String.format("'%s'", e.getMessage()));
+            return false;
         }
-
-        if (validAction) {
-            callback.success();
-        } else {
-            callback.error("Invalid action: " + action);
-        }
-
-        return validAction;
     }
 
     /**
@@ -138,7 +143,11 @@ public class BackgroundMode extends CordovaPlugin {
      */
     @Override
     public void onStop () {
-        clearKeyguardFlags(cordova.getActivity());
+        try {
+            clearKeyguardFlags(cordova.getActivity());
+        } catch (Exception e) {
+            fireEvent(Event.FAILURE, String.format("'%s'", e.getMessage()));
+        }
     }
 
     /**
@@ -149,8 +158,12 @@ public class BackgroundMode extends CordovaPlugin {
     @Override
     public void onResume (boolean multitasking)
     {
-        inBackground = false;
-        stopService();
+        try {
+            inBackground = false;
+            stopService();
+        } catch (Exception e) {
+            fireEvent(Event.FAILURE, String.format("'%s'", e.getMessage()));
+        }
     }
 
     /**
@@ -159,8 +172,12 @@ public class BackgroundMode extends CordovaPlugin {
     @Override
     public void onDestroy()
     {
-        stopService();
-        android.os.Process.killProcess(android.os.Process.myPid());
+        try {
+            stopService();
+            android.os.Process.killProcess(android.os.Process.myPid());
+        } catch (Exception e) {
+            fireEvent(Event.FAILURE, String.format("'%s'", e.getMessage()));
+        }
     }
 
     /**
